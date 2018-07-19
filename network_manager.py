@@ -39,20 +39,21 @@ class ASTopo(IPTopo):
         tmp = self._addRouter_v6('as'+str(n)+'r1', config=(RouterConfig, {
                 'daemons': [(BGP, {'address_families': (
                                     _bgp.AF_INET6(networks=(prefix,)),),
-                                    'advertisement_timer': 1})]}))
+                                    'advertisement_timer': 1,
+                                    'hold_time': 9})]}))
         new_as = AS(n, (tmp,))
         self.addOverlay(new_as)
         return new_as
 
     def provider_customer_connection(self, provider, customer):
         self._connect_ases(provider, customer)
-        set_community(self, provider, customer.asn, str(provider.asn) + ':1')
-        set_community(self, customer, provider.asn, str(customer.asn) + ':2')
+        set_community(self, provider, customer.asn, str(provider.asn) + ':1336')
+        set_community(self, customer, provider.asn, str(customer.asn) + ':1338')
 
     def peer_connection(self, as1, as2):
         self._connect_ases(as1, as2)
-        set_community(self, as1, as2.asn, str(as1.asn) + ':0')
-        set_community(self, as2, as1.asn, str(as2.asn) + ':0')
+        set_community(self, as1, as2.asn, str(as1.asn) + ':1337')
+        set_community(self, as2, as1.asn, str(as2.asn) + ':1337')
     
     def _addRouter_v6(self, name, **kwargs):
         return self.addRouter(name, use_v4=False, use_v6=True, **kwargs)
