@@ -30,15 +30,15 @@ class ASTopo(IPTopo):
         """Do not use this method, it is only needed for compatibility"""
         return
 
-    def add_AS(self, asn, prefix):
+    def add_AS(self, asn, prefixes):
         try:
             n = int(asn)
         except:
             error("Invalid AS number: " + str(asn))
-        self._check_prefix(prefix)
+        self._check_prefix(prefixes)
         tmp = self._addRouter_v6('as'+str(n)+'r1', config=(RouterConfig, {
                 'daemons': [(BGP, {'address_families': (
-                                    _bgp.AF_INET6(networks=(prefix,)),),
+                                    _bgp.AF_INET6(networks=prefixes),),
                                     'advertisement_timer': 1,
                                     'hold_time': 9})]}))
         new_as = AS(n, (tmp,))
@@ -66,14 +66,15 @@ class ASTopo(IPTopo):
         self.addLink(as1.nodes[0], as2.nodes[0])
         ebgp_session(self, as1.nodes[0], as2.nodes[0])
 
-    def _check_prefix(self, prefix):
+    def _check_prefix(self, prefixes):
         try:
-            l = int(prefix[prefix.find("/")+1:])
-            ipaddr.IPAddress(prefix[:prefix.find("/")])
-            if l <= 0 or l >= 128:
-                raise Error()
+            for p in prefixes:
+                l = int(p[p.find("/")+1:])
+                ipaddr.IPAddress(p[:p.find("/")])
+                if l <= 0 or l >= 128:
+                    raise Error()
         except:
-            error("Invalid prefix: " + prefix)
+            error("Invalid prefixes: " + prefixes)
 
 
 class NetworkManager:
@@ -82,8 +83,8 @@ class NetworkManager:
         self.RIBCommand = '(echo zebra; echo "show bgp"; sleep 1; exit;) | telnet localhost bgpd'
         self.topo = ASTopo()
 
-    def add_AS(self, asn, prefix):
-        return self.topo.add_AS(asn, prefix)
+    def add_AS(self, asn, prefixes):
+        return self.topo.add_AS(asn, prefixes)
 
     def peer_connection(self, as1, as2):
         self.topo.peer_connection(as1, as2)
